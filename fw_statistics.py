@@ -4,16 +4,12 @@ from typing import Literal, TypeAlias, Dict
 from .firewalla import BaseFirewallaSDK, set_type
 
 FlowType: TypeAlias = Literal["topBoxesByBlockedFlows", "topBoxesBySecurityAlarms", "topRegionsByBlockedFlows"]
+StatsParams: TypeAlias = Literal["group", "limit"]
 
-class Statistics(BaseFirewallaSDK):
-
-    def __init__(self, api_key: str, domain: str):
-        super().__init__(api_key, domain)
-        self.url = None
-   
-    def get_stats(self, params: Dict = {"group": None, "limit": 5}, type: FlowType=None):
+class Statistics(BaseFirewallaSDK):   
+    def get_stats(self, params: StatsParams, type: FlowType=None):
         query_params = ["group", "limit"]
         for key, value in params.items():
             if key in query_params:
                 params[key] = value
-        return self.__get("stats", params=params, type=type)
+        return self.__get("stats", params=params, identifier=type)
