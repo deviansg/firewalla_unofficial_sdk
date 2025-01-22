@@ -6,7 +6,7 @@ from classes.flows import Flows
 from classes.target_lists import TargetLists
 from classes.trends import Trends
 
-class Firewalla(BaseFirewallaSDK):
+class Firewalla():
     
     def __init__(self, api_key, firewalla_msp_subdomain):
         self.api_key = api_key

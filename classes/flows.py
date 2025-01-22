@@ -9,5 +9,5 @@ class Flows(BaseFirewallaSDK):
                 "query": None, "groupBy": None, "sortBy": None, "limit": None, "cursor": None
             }
         
-        return self.__get("flows", params=params)
+        return self._get("flows", params=params)
             

@@ -7,7 +7,7 @@ EndpointTypes = Literal["pause", "resume"]
 
 class Rules(BaseFirewallaSDK):
     def __post_rules(self, endpoint: EndpointTypes, id: int, query: RulesQuery):
-        headers = self._get_headers()
+        headers = self.__get_headers()
         url = f"{self.domain}/{self.api_version}/boxes/{id}/{endpoint}"
         response = requests.post(url, headers=headers, json={"id": id}, params=query)
         response.raise_for_status()
