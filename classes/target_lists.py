@@ -1,6 +1,5 @@
-import requests
 from typing import Literal, Dict
-from .firewalla import BaseFirewallaSDK
+from classes.base import BaseFirewallaSDK
 
 class TargetLists(BaseFirewallaSDK):
     def get_target_lists(self):

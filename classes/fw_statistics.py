@@ -1,7 +1,5 @@
-import requests
-
 from typing import Literal, TypeAlias, Dict
-from .firewalla import BaseFirewallaSDK, set_type
+from classes.base import BaseFirewallaSDK
 
 FlowType: TypeAlias = Literal["topBoxesByBlockedFlows", "topBoxesBySecurityAlarms", "topRegionsByBlockedFlows"]
 StatsParams: TypeAlias = Literal["group", "limit"]

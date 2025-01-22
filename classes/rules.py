@@ -1,6 +1,6 @@
 import requests
 from typing import Literal, Dict
-from .firewalla import BaseFirewallaSDK
+from classes.base import BaseFirewallaSDK
 
 RulesQuery = Literal["group", "limit"]
 EndpointTypes = Literal["pause", "resume"]

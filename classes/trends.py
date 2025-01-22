@@ -1,5 +1,5 @@
 from typing import Dict
-from .firewalla import BaseFirewallaSDK
+from classes.base import BaseFirewallaSDK
 
 class Trends(BaseFirewallaSDK):
     def get_trends(self, **kwargs):

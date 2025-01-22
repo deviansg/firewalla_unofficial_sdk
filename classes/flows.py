@@ -1,0 +1,13 @@
+from typing import Dict, TypeAlias
+from classes.base import BaseFirewallaSDK
+
+class Flows(BaseFirewallaSDK):
+    
+    def get_flows(self, params: Dict = None):
+        if params is None:
+            params = {
+                "query": None, "groupBy": None, "sortBy": None, "limit": None, "cursor": None
+            }
+        
+        return self.__get("flows", params=params)
+            

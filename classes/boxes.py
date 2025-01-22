@@ -1,5 +1,4 @@
-import requests
-from .firewalla import BaseFirewallaSDK
+from classes.base import BaseFirewallaSDK
 
 class Boxes(BaseFirewallaSDK):
     def get_boxes(self, group: int = None):
