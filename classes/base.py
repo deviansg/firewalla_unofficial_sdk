@@ -1,5 +1,6 @@
 import base64
 import requests
+import urllib.parse
 from typing import Dict, Union
 
 class BaseFirewallaSDK:
@@ -21,18 +22,20 @@ class BaseFirewallaSDK:
         if identifier:
             self.url = f"{self.url}/{identifier}"
         headers = self.__get_headers()
+        if "query" in params:
+            params["query"] = urllib.parse.quote_plus(params["query"])
+        print(params)
         response = requests.get(self.url, headers=headers, params=params)
         response.raise_for_status()
         data = response.json()
-                
+                        
         if isinstance(data, dict):
             self.paginated_results.extend(data.get("results", []))
-            
             next_cursor = data.get("next_cursor")
         
             while next_cursor:
                 next_cursor = base64.b64decode(next_cursor).decode('utf-8')
-                params["paginate"]["cursor"] = next_cursor
+                params["cursor"] = next_cursor
                 data = self._get(endpoint=endpoint, params=params, identifier=identifier)
                 self.paginated_results.extend(data.get("results", []))
                 next_cursor = data.get("next_cursor")
