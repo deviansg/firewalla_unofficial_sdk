@@ -24,11 +24,11 @@ class BaseFirewallaSDK:
         headers = self.__get_headers()
         if "query" in params:
             params["query"] = urllib.parse.quote_plus(params["query"])
-        print(params)
+            print(params["query"])
         response = requests.get(self.url, headers=headers, params=params)
         response.raise_for_status()
         data = response.json()
-                        
+                  
         if isinstance(data, dict):
             self.paginated_results.extend(data.get("results", []))
             next_cursor = data.get("next_cursor")
@@ -45,14 +45,14 @@ class BaseFirewallaSDK:
             return data
         
 
-    def _post(self, endpoint: str, json: Dict) -> Dict:
+    def _post(self, endpoint: str, json: Dict = None):
         headers = self.__get_headers()
         url = f"{self.domain}/{self.api_version}/{endpoint}"
         response = requests.post(url, headers=headers, json=json)
         response.raise_for_status()
         return response.json()
     
-    def _put(self, endpoint: str, identifier: Union[int, str] = None, json: Dict = None) -> Dict:
+    def _put(self, endpoint: str, identifier: Union[int, str] = None, json: Dict = None):
         headers = self.__get_headers()
         url = f"{self.domain}/{self.api_version}/{endpoint}/{identifier}"
         response = requests.put(url, headers=headers, json=json)

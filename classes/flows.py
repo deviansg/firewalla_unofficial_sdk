@@ -1,4 +1,4 @@
-from typing import Dict, TypeAlias
+from typing import Dict
 from classes.base import BaseFirewallaSDK
 
 class Flows(BaseFirewallaSDK):

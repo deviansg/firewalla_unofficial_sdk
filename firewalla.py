@@ -1,4 +1,4 @@
-from classes.base import BaseFirewallaSDK
+from classes.rules import Rules
 from classes.alarms import Alarms
 from classes.boxes import Boxes
 from classes.devices import Devices
@@ -29,3 +29,6 @@ class Firewalla():
     
     def trends(self):
         return Trends(self.api_key, self.firewalla_msp_subdomain)
+
+    def rules(self):
+        return Rules(self.api_key, self.firewalla_msp_subdomain)

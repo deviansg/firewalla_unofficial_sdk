@@ -1,4 +1,3 @@
-from typing import Dict
 from classes.base import BaseFirewallaSDK
 
 class Alarms(BaseFirewallaSDK):

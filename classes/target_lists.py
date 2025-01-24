@@ -1,4 +1,3 @@
-from typing import Literal, Dict
 from classes.base import BaseFirewallaSDK
 
 class TargetLists(BaseFirewallaSDK):
