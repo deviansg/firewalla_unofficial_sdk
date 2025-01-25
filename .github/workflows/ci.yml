@@ -21,7 +21,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: "3.8"
+          python-version: "3.13"
 
       - name: Install uv
         run: |
@@ -31,7 +31,7 @@ jobs:
       - name: Install dependencies
         run: |
           uv venv
-          uv pip install requests pytest ruff bandit
+          uv pip install requests pytest pytest-cov ruff bandit
 
       - name: Lint with ruff
         run: |
@@ -39,7 +39,7 @@ jobs:
 
       - name: Run tests with pytest
         run: |
-          uv run pytest
+          uv run pytest --cov=. --cov-report=xml
 
       - name: Check security with Bandit
         run: |
