@@ -60,14 +60,13 @@ class Firewalla():
         if identifier:
             self.url = f"{self.url}/{identifier}"
         headers = self.__get_headers()
-        if "query" in params:
-            params["query"] = urllib.parse.quote_plus(params["query"])
-            print(params["query"])
-        response = requests.get(self.url, headers=headers, params=params)
+        if params is not None and "query" in params:
+            params["query"] = urllib.parse.quote_plus(str(params["query"]))
+        response = requests.get(self.url, headers=headers, params=params, timeout=10)
         response.raise_for_status()
         data = response.json()
                   
-        if isinstance(data, dict):
+        if isinstance(data, dict) and "results" in data:
             self.paginated_results.extend(data.get("results", []))
             next_cursor = data.get("next_cursor")
         
@@ -82,7 +81,6 @@ class Firewalla():
         else:
             return data
         
-
     def __post(self, endpoint: str, json: Dict = None):
         """
         Sends a POST request to the specified endpoint with the given JSON payload.
@@ -99,7 +97,7 @@ class Firewalla():
         """
         headers = self.__get_headers()
         url = f"{self.domain}/{self.api_version}/{endpoint}"
-        response = requests.post(url, headers=headers, json=json)
+        response = requests.post(url, headers=headers, json=json, timeout=10)
         response.raise_for_status()
         return response.json()
     
@@ -120,11 +118,11 @@ class Firewalla():
         """
         headers = self.__get_headers()
         url = f"{self.domain}/{self.api_version}/{endpoint}/{identifier}"
-        response = requests.put(url, headers=headers, json=json)
+        response = requests.put(url, headers=headers, json=json, timeout=10)
         response.raise_for_status()
         return response.json()
     
-    def __delete(self, endpoint: str, identifier: Union[int, str] = None):
+    def __delete(self, endpoint: str, identifier: Union[int, str] = None, params: Dict = None):
         """
         Sends a DELETE request to the specified endpoint with an optional identifier.
 
@@ -140,7 +138,7 @@ class Firewalla():
         """
         headers = self.__get_headers()
         url = f"{self.domain}/{self.api_version}/{endpoint}/{identifier}"
-        response = requests.delete(url, headers=headers)
+        response = requests.delete(url, headers=headers, timeout=10)
         response.raise_for_status()
         return response.json()
 
@@ -161,7 +159,7 @@ class Firewalla():
         """
         headers = self.__get_headers()
         url = f"{self.domain}/{self.api_version}/boxes/{id}/{endpoint}"
-        response = requests.post(url, headers=headers, json={"id": id}, params=query)
+        response = requests.post(url, headers=headers, json={"id": id}, params=query, timeout=10)
         response.raise_for_status()
         return response.json()
     
