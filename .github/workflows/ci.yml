@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - functional
+  pull_request:
+    branches:
+      - main
+      - functional
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+
+      - name: Install uv
+        run: |
+          curl -sSL https://install.astral.sh | bash
+
+      - name: Install dependencies
+        run: |
+          uv install -r requirements.txt
+          uv pip install pytest ruff bandit
+
+      - name: Lint with ruff
+        run: |
+          uv run ruff check .
+
+      - name: Run tests with pytest
+        run: |
+          uv run pytest
+
+      - name: Check security with Bandit
+        run: |
+          uv run bandit -r firewalla.py
