@@ -30,8 +30,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv install -r requirements.txt
-          uv pip install pytest ruff bandit
+          uv pip install requests pytest ruff bandit
 
       - name: Lint with ruff
         run: |
