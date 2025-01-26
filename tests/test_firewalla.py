@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch
-from firewalla import Firewalla
+from ..firewalla import Firewalla
 
 @pytest.fixture
 def firewalla_instance():
@@ -121,3 +121,11 @@ def test_get_target_list(mock_get, firewalla_instance):
     response = firewalla_instance.get_target_list(id=1)
     assert response == mock_response
     
+@patch('firewalla.requests.post')
+def test_post_rules_pause(mock_post, firewalla_instance):
+    mock_response = {"status": "paused"}
+    mock_post.return_value.json.return_value = mock_response
+    mock_post.return_value.raise_for_status = lambda: None
+
+    response = firewalla_instance._Firewalla__post_rules(endpoint="pause", id=1, query={"group": "foo", "limit": 10})
+    assert response == mock_response
