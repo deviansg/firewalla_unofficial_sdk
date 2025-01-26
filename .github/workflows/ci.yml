@@ -39,7 +39,7 @@ jobs:
 
       - name: Run tests with pytest
         run: |
-          pip install pytest pytest-cov
+          pip install pytest pytest-cov requests
           pytest --cov=firewalla_unofficial_sdk --cov-report term --cov-report xml:coverage.xml .
 
       - name: Coveralls
