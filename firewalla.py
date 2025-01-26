@@ -60,8 +60,11 @@ class Firewalla:
         if identifier:
             self.url = f"{self.url}/{identifier}"
         headers = self.__get_headers()
-        if params is not None and "query" in params:
-            params["query"] = urllib.parse.quote_plus(str(params["query"]))
+        if params is not None:
+            if "query" in params and not None:
+                params["query"] = urllib.parse.quote_plus(str(params["query"]))
+            if "cursor" in params and not None:
+                params["cursor"] = base64.decode(params["cursor"])
         response = requests.get(self.url, headers=headers, params=params, timeout=timeout)
         response.raise_for_status()
         data = response.json()
