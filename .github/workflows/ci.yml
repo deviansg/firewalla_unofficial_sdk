@@ -41,12 +41,19 @@ jobs:
         run: |
           pip install pytest pytest-cov requests
           pytest --cov=firewalla_unofficial_sdk --cov-branch --cov-report=xml
+          pytest --cov --junitxml=junit.xml -o junit_family=legacy
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: deviansg/firewalla_unofficial_sdk
+
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Check security with Bandit
         run: |
