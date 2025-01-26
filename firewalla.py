@@ -64,7 +64,7 @@ class Firewalla:
             if "query" in params and not None:
                 params["query"] = urllib.parse.quote_plus(str(params["query"]))
             if "cursor" in params and not None:
-                params["cursor"] = base64.decode(params["cursor"])
+                params["cursor"] = base64.b64decode(str(params["cursor"]))
         response = requests.get(self.url, headers=headers, params=params, timeout=timeout)
         response.raise_for_status()
         data = response.json()
