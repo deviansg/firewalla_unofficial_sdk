@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/deviansg/firewalla_unofficial_sdk/graph/badge.svg?token=8NB3DUUXOW)](https://codecov.io/gh/deviansg/firewalla_unofficial_sdk)
+
 # Unofficial Firewalla SDK
 
 A simple Python-based SDK for Firewalla. All methods are based on the Firewalla API documentation found here: https://docs.firewalla.net/
