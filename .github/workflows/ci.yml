@@ -40,13 +40,13 @@ jobs:
       - name: Run tests with pytest
         run: |
           pip install pytest pytest-cov requests
-          pytest --cov=firewalla_unofficial_sdk --cov-report term --cov-report xml:coverage.xml .
+          pytest --cov=firewalla_unofficial_sdk --cov-report term --cov-report=lcov .
 
       - name: Coveralls
         uses: coverallsapp/github-action@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: coverage.xml
+          path-to-lcov: coverage.lcov
 
       - name: Check security with Bandit
         run: |
