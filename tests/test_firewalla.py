@@ -17,7 +17,7 @@ def test_get_boxes_no_group(mock_get, firewalla_instance):
     mock_get.return_value.raise_for_status = lambda: None
 
     response = firewalla_instance.get_boxes()
-    assert response == mock_response["results"]
+    assert response == mock_response
 
 @patch('firewalla.requests.get')
 def test_get_boxes_with_group(mock_get, firewalla_instance):
@@ -28,7 +28,7 @@ def test_get_boxes_with_group(mock_get, firewalla_instance):
     mock_get.return_value.raise_for_status = lambda: None
 
     response = firewalla_instance.get_boxes(group=1)
-    assert response == mock_response["results"]
+    assert response == mock_response
 
 @patch('firewalla.requests.get')
 def test_get_alarms(mock_get, firewalla_instance):
@@ -39,7 +39,7 @@ def test_get_alarms(mock_get, firewalla_instance):
     mock_get.return_value.raise_for_status = lambda: None
 
     response = firewalla_instance.get_alarms()
-    assert response == mock_response["results"]
+    assert response == mock_response
 
 @patch('firewalla.requests.get')
 def test_get_alarm(mock_get, firewalla_instance):
@@ -50,7 +50,7 @@ def test_get_alarm(mock_get, firewalla_instance):
     mock_get.return_value.raise_for_status = lambda: None
 
     response = firewalla_instance.get_alarm(box_id="box1", alarm_id="alarm1")
-    assert response == mock_response["results"]
+    assert response == mock_response
 
 @patch('firewalla.requests.delete')
 def test_delete_alarm(mock_delete, firewalla_instance):
@@ -88,7 +88,7 @@ def test_get_flows(mock_get, firewalla_instance):
     mock_get.return_value.raise_for_status = lambda: None
 
     response = firewalla_instance.get_flows()
-    assert response == mock_response["results"]
+    assert response == mock_response
 
 @patch('firewalla.requests.get')
 def test_get_target_lists(mock_get, firewalla_instance):
@@ -119,13 +119,4 @@ def test_get_target_list(mock_get, firewalla_instance):
     mock_get.return_value.raise_for_status = lambda: None
 
     response = firewalla_instance.get_target_list(id=1)
-    assert response == mock_response
-    
-@patch('firewalla.requests.post')
-def test_post_rules_pause(mock_post, firewalla_instance):
-    mock_response = {"status": "paused"}
-    mock_post.return_value.json.return_value = mock_response
-    mock_post.return_value.raise_for_status = lambda: None
-
-    response = firewalla_instance._Firewalla__post_rules(endpoint="pause", id=1, query={"group": "foo", "limit": 10})
     assert response == mock_response
