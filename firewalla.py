@@ -236,7 +236,7 @@ class Firewalla:
         return self.__put("target-lists", identifier=id, json={"name": name, "targets": targets, "notes": notes})
     
     def delete_target_list(self, id: int) -> Dict:
-        return self.__delete("target-lists", identifier=id)
+        return self.__delete(f"target-lists/{id}")
 
     def get_devices(self, box: str = None, group: str = None) -> Union[Dict, List]:
         return self.__get("devices", params={"box": box, "group": group})

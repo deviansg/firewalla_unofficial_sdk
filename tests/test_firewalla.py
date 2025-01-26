@@ -1,4 +1,5 @@
 import pytest
+import requests
 from unittest.mock import patch
 from ..firewalla import Firewalla
 
@@ -708,19 +709,16 @@ def test_get_rule_trends_with_group(mock_get, firewalla_instance):
     
 @patch('firewalla.requests.delete')
 def test_delete_target_list(mock_delete, firewalla_instance):
-    mock_response = {"status": "deleted"}
+    mock_response = {"status": "success"}
     mock_delete.return_value.json.return_value = mock_response
     mock_delete.return_value.raise_for_status = lambda: None
 
-    id = 1
-    response = firewalla_instance.delete_target_list(id=id)
+    response = firewalla_instance.delete_target_list(id="1")
     assert response == mock_response
+
     mock_delete.assert_called_once_with(
-        f"https://test_subdomain.firewalla.net/v2/target-lists/{id}",
-        headers={
-            "Authorization": "Token test_api_key",
-            "Content-Type": "application/json"
-        },
+        "https://test_subdomain.firewalla.net/v2/target-lists/1",
+        headers={"Authorization": "Token test_api_key", "Content-Type": "application/json"},
         params=None,
         timeout=10
     )
@@ -728,7 +726,6 @@ def test_delete_target_list(mock_delete, firewalla_instance):
 @patch('firewalla.requests.delete')
 def test_delete_target_list_invalid_id(mock_delete, firewalla_instance):
     mock_delete.return_value.raise_for_status.side_effect = requests.exceptions.HTTPError("404 Client Error: Not Found for url")
-
     id = 999
     with pytest.raises(requests.exceptions.HTTPError):
         firewalla_instance.delete_target_list(id=id)
