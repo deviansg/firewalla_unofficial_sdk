@@ -9,8 +9,17 @@ FlowType: TypeAlias = Literal["topBoxesByBlockedFlows", "topBoxesBySecurityAlarm
 StatsParams: TypeAlias = Literal["group", "limit"]
 
 class Firewalla:
+    '''
+    Firewalla API client
+    Simple interface to interact with the Firewalla API
+    '''
     
     def __init__(self, api_key: str, firewalla_msp_subdomain: str):
+        '''
+        Initialize the Firewalla API client
+        :param api_key: Your Firewalla API key
+        :param firewalla_msp_subdomain: Your Firewalla MSP subdomain
+        '''
         self.api_key: str = api_key
         self.domain: str = f"https://{firewalla_msp_subdomain}.firewalla.net"
         self.api_version: str = "v2"
@@ -18,12 +27,23 @@ class Firewalla:
         self.paginated_results: List[Dict] = []
 
     def __get_headers(self) -> Dict[str, str]:
+        '''
+        Get the headers for the API request
+        :return: The headers for the API request
+        '''
         return {
             "Authorization": f"Token {self.api_key}",
             "Content-Type": "application/json"
         }
 
     def __get(self, endpoint: str, params: Optional[Dict] = None, identifier: Optional[Union[int, str]] = None) -> Union[Dict, List]:
+        '''
+        Make a GET request to the Firewalla API
+        :param endpoint: The endpoint to make the request to
+        :param params: The query parameters for the request
+        :param identifier: The identifier for the request
+        :return: The response from the API
+        '''
         self.url = f"{self.domain}/{self.api_version}/{endpoint}"
         if identifier:
             self.url = f"{self.url}/{identifier}"
