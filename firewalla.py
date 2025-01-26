@@ -25,7 +25,7 @@ class Firewalla:
         self.api_key: str = api_key
         self.domain: str = f"https://{firewalla_msp_subdomain}.firewalla.net"
         self.api_version: str = "v2"
-        self.url: Optional[str] = None
+        self.url: str = None
         self.paginated_results: List[Dict] = []
 
     def __get_headers(self) -> Dict[str, str]:
@@ -216,29 +216,29 @@ class Firewalla:
         """
         return self.__get("target-lists")
 
-    def get_target_list(self, id: Optional[str] = None) -> Union[Dict, List]:
+    def get_target_list(self, id: str = None) -> Union[Dict, List]:
         """
         Retrieve a specific target list.
 
         Args:
-            id (Optional[str], optional): The ID of the target list. Defaults to None.
+            id (str, optional): The ID of the target list. Defaults to None.
 
         Returns:
             Union[Dict, List]: The target list data.
         """
         return self.__get("target-lists", identifier=id)
     
-    def create_target_list(self, name: Optional[str] = None, targets: List = [], 
-                           owner: Optional[str] = None, category: Optional[str] = None, notes: Optional[str] = None) -> Dict:
+    def create_target_list(self, name: str = None, targets: List = [], 
+                           owner: str = None, category: str = None, notes: str = None) -> Dict:
         return self.__post("target-lists", json={"name": name, "targets": targets, "owner": owner, "category": category, "notes": notes})
     
-    def update_target_list(self, id: int, name: Optional[str] = None, targets: List = [], notes: Optional[str] = None) -> Dict:
+    def update_target_list(self, id: int, name: str = None, targets: List = [], notes: str = None) -> Dict:
         return self.__put("target-lists", identifier=id, json={"name": name, "targets": targets, "notes": notes})
     
     def delete_target_list(self, id: int) -> Dict:
         return self.__delete("target-lists", identifier=id)
 
-    def get_devices(self, box: Optional[int] = None, group: Optional[str] = None) -> Union[Dict, List]:
+    def get_devices(self, box: str = None, group: str = None) -> Union[Dict, List]:
         return self.__get("devices", params={"box": box, "group": group})
     
     def get_stats(self, params: StatsParams, type: Optional[FlowType] = None) -> Union[Dict, List]:
