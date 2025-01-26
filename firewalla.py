@@ -15,11 +15,13 @@ class Firewalla:
     '''
     
     def __init__(self, api_key: str, firewalla_msp_subdomain: str):
-        '''
-        Initialize the Firewalla API client
-        :param api_key: Your Firewalla API key
-        :param firewalla_msp_subdomain: Your Firewalla MSP subdomain
-        '''
+        """
+        Initialize the Firewalla SDK instance.
+
+        Args:
+            api_key (str): The API key for authenticating with the Firewalla service.
+            firewalla_msp_subdomain (str): The subdomain for the Firewalla MSP.
+        """
         self.api_key: str = api_key
         self.domain: str = f"https://{firewalla_msp_subdomain}.firewalla.net"
         self.api_version: str = "v2"
@@ -27,101 +29,200 @@ class Firewalla:
         self.paginated_results: List[Dict] = []
 
     def __get_headers(self) -> Dict[str, str]:
-        '''
-        Get the headers for the API request
-        :return: The headers for the API request
-        '''
+        """
+        Get the headers for the API request.
+
+        Returns:
+            Dict[str, str]: A dictionary containing the headers.
+        """
         return {
             "Authorization": f"Token {self.api_key}",
             "Content-Type": "application/json"
         }
 
-    def __get(self, endpoint: str, params: Optional[Dict] = None, identifier: Optional[Union[int, str]] = None) -> Union[Dict, List]:
-        '''
-        Make a GET request to the Firewalla API
-        :param endpoint: The endpoint to make the request to
-        :param params: The query parameters for the request
-        :param identifier: The identifier for the request
-        :return: The response from the API
-        '''
+    def __get(self, endpoint: str, params: Optional[Dict] = None, identifier: Optional[Union[int, str]] = None, timeout: int = 10) -> Union[Dict, List]:
+        """
+        Send a GET request to the specified endpoint.
+
+        Args:
+            endpoint (str): The API endpoint to send the GET request to.
+            params (Dict, optional): A dictionary of query parameters to include in the request. Defaults to None.
+            identifier (Union[int, str], optional): An optional identifier to append to the endpoint URL. Defaults to None.
+            timeout (int, optional): The maximum number of seconds to wait for a response. Defaults to 10 seconds.
+
+        Returns:
+            Union[Dict, List]: The JSON response from the API. If the response contains paginated results, 
+                               it returns a list of all results. Otherwise, it returns the JSON response as a dictionary.
+        Raises:
+            HTTPError: If the HTTP request returned an unsuccessful status code.
+        """
         self.url = f"{self.domain}/{self.api_version}/{endpoint}"
         if identifier:
             self.url = f"{self.url}/{identifier}"
         headers = self.__get_headers()
         if params is not None and "query" in params:
             params["query"] = urllib.parse.quote_plus(str(params["query"]))
-        response = requests.get(self.url, headers=headers, params=params, timeout=10)
+        response = requests.get(self.url, headers=headers, params=params, timeout=timeout)
         response.raise_for_status()
         data = response.json()
-                  
-        if isinstance(data, dict) and "results" in data:
-            self.paginated_results.extend(data.get("results", []))
-            next_cursor = data.get("next_cursor")
-        
-            while next_cursor:
-                next_cursor = base64.b64decode(next_cursor).decode('utf-8')
-                params["cursor"] = next_cursor
-                data = self.__get(endpoint=endpoint, params=params, identifier=identifier)
-                self.paginated_results.extend(data.get("results", []))
-                next_cursor = data.get("next_cursor")
+        return data
 
-            return self.paginated_results
-        else:
-            return data
-        
-    def __post(self, endpoint: str, json: Optional[Dict] = None) -> Dict:
+    def __post(self, endpoint: str, json: Optional[Dict] = None, timeout: int = 10) -> Dict:
+        """
+        Send a POST request to the specified endpoint.
+
+        Args:
+            endpoint (str): The API endpoint to send the POST request to.
+            json (Dict, optional): The JSON payload to include in the request. Defaults to None.
+            timeout (int, optional): The maximum number of seconds to wait for a response. Defaults to 10 seconds.
+
+        Returns:
+            Dict: The JSON response from the API.
+        Raises:
+            HTTPError: If the HTTP request returned an unsuccessful status code.
+        """
         headers = self.__get_headers()
         url = f"{self.domain}/{self.api_version}/{endpoint}"
-        response = requests.post(url, headers=headers, json=json, timeout=10)
-        response.raise_for_status()
-        return response.json()
-    
-    def __put(self, endpoint: str, identifier: Optional[Union[int, str]] = None, json: Optional[Dict] = None) -> Dict:
-        headers = self.__get_headers()
-        url = f"{self.domain}/{self.api_version}/{endpoint}/{identifier}"
-        response = requests.put(url, headers=headers, json=json, timeout=10)
-        response.raise_for_status()
-        return response.json()
-    
-    def __delete(self, endpoint: str, identifier: Optional[Union[int, str]] = None, params: Optional[Dict] = None) -> Dict:
-        headers = self.__get_headers()
-        url = f"{self.domain}/{self.api_version}/{endpoint}/{identifier}"
-        response = requests.delete(url, headers=headers, timeout=10)
+        response = requests.post(url, headers=headers, json=json, timeout=timeout)
         response.raise_for_status()
         return response.json()
 
-    def __post_rules(self, endpoint: EndpointTypes, id: int, query: RulesQuery) -> Dict:
+    def __put(self, endpoint: str, identifier: Optional[Union[int, str]] = None, json: Optional[Dict] = None, timeout: int = 10) -> Dict:
+        """
+        Send a PUT request to the specified endpoint.
+
+        Args:
+            endpoint (str): The API endpoint to send the PUT request to.
+            identifier (Union[int, str], optional): An optional identifier to append to the endpoint URL. Defaults to None.
+            json (Dict, optional): The JSON payload to include in the request. Defaults to None.
+            timeout (int, optional): The maximum number of seconds to wait for a response. Defaults to 10 seconds.
+
+        Returns:
+            Dict: The JSON response from the API.
+        Raises:
+            HTTPError: If the HTTP request returned an unsuccessful status code.
+        """
         headers = self.__get_headers()
-        url = f"{self.domain}/{self.api_version}/boxes/{id}/{endpoint}"
-        response = requests.post(url, headers=headers, json={"id": id}, params=query, timeout=10)
+        url = f"{self.domain}/{self.api_version}/{endpoint}"
+        if identifier:
+            url = f"{url}/{identifier}"
+        response = requests.put(url, headers=headers, json=json, timeout=timeout)
         response.raise_for_status()
         return response.json()
-    
+
+    def __delete(self, endpoint: str, params: Optional[Dict] = None, timeout: int = 10) -> Dict:
+        """
+        Send a DELETE request to the specified endpoint.
+
+        Args:
+            endpoint (str): The API endpoint to send the DELETE request to.
+            params (Dict, optional): A dictionary of query parameters to include in the request. Defaults to None.
+            timeout (int, optional): The maximum number of seconds to wait for a response. Defaults to 10 seconds.
+
+        Returns:
+            Dict: The JSON response from the API.
+        Raises:
+            HTTPError: If the HTTP request returned an unsuccessful status code.
+        """
+        headers = self.__get_headers()
+        url = f"{self.domain}/{self.api_version}/{endpoint}"
+        response = requests.delete(url, headers=headers, params=params, timeout=timeout)
+        response.raise_for_status()
+        return response.json()
+
     def get_boxes(self, group: Optional[int] = None) -> Union[Dict, List]:
         return self.__get("boxes", params={"group": group})
     
     def get_alarms(self) -> Union[Dict, List]:
+        """
+        Retrieve the alarms.
+
+        Returns:
+            Union[Dict, List]: The alarms data.
+        """
         return self.__get("alarms", params={"query": None, "groupBy": None, "sortBy": None, "limit": None, "cursor": None })
 
     def get_alarm(self, box_id: str, alarm_id: str) -> Union[Dict, List]:
+        """
+        Retrieve a specific alarm.
+
+        Args:
+            box_id (str): The ID of the box.
+            alarm_id (str): The ID of the alarm.
+
+        Returns:
+            Union[Dict, List]: The alarm data.
+        """
         return self.__get("alarms", params={"gid": box_id, "aid": alarm_id})
     
     def delete_alarm(self, box_id: str, alarm_id: str) -> Dict:
+        """
+        Delete a specific alarm.
+
+        Args:
+            box_id (str): The ID of the box.
+            alarm_id (str): The ID of the alarm.
+
+        Returns:
+            Dict: The response from the API.
+        """
         return self.__delete("alarms", params={"gid": box_id, "aid": alarm_id})
     
     def pause_rule(self, id: str) -> str:
+        """
+        Pause a specific rule.
+
+        Args:
+            id (str): The ID of the rule.
+
+        Returns:
+            str: The response from the API.
+        """
         return self.__post(f"rules/{id}/pause")
     
     def resume_rule(self, id: str) -> str:
+        """
+        Resume a specific rule.
+
+        Args:
+            id (str): The ID of the rule.
+
+        Returns:
+            str: The response from the API.
+        """
         return self.__post(f"rules/{id}/resume")
     
     def get_flows(self, params: Dict = {"query": None, "groupBy": None, "sortBy": None, "limit": None, "cursor": None}) -> Union[Dict, List]:
+        """
+        Retrieve the flows.
+
+        Args:
+            params (Dict, optional): A dictionary of query parameters. Defaults to {"query": None, "groupBy": None, "sortBy": None, "limit": None, "cursor": None}.
+
+        Returns:
+            Union[Dict, List]: The flows data.
+        """
         return self.__get("flows", params=params)
     
     def get_target_lists(self) -> Union[Dict, List]:
+        """
+        Retrieve the target lists.
+
+        Returns:
+            Union[Dict, List]: The target lists data.
+        """
         return self.__get("target-lists")
 
     def get_target_list(self, id: Optional[str] = None) -> Union[Dict, List]:
+        """
+        Retrieve a specific target list.
+
+        Args:
+            id (Optional[str], optional): The ID of the target list. Defaults to None.
+
+        Returns:
+            Union[Dict, List]: The target list data.
+        """
         return self.__get("target-lists", identifier=id)
     
     def create_target_list(self, name: Optional[str] = None, targets: List = [], 
