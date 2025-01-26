@@ -46,6 +46,7 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          slug: deviansg/firewalla_unofficial_sdk
 
       - name: Check security with Bandit
         run: |
