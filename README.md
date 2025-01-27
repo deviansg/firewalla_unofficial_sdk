@@ -1,6 +1,6 @@
 [![codecov](https://codecov.io/gh/deviansg/firewalla_unofficial_sdk/graph/badge.svg?token=8NB3DUUXOW)](https://codecov.io/gh/deviansg/firewalla_unofficial_sdk)
 
-![Build](https://github.com/github/docs/actions/workflows/ci.yml/badge.svg)
+![Build](https://github.com/deviansg/firewalla_unofficial_sdk/actions/workflows/ci.yml/badge.svg)
 
 # Unofficial Firewalla SDK
 
