@@ -1,6 +1,6 @@
 [![codecov](https://codecov.io/gh/deviansg/firewalla_unofficial_sdk/graph/badge.svg?token=8NB3DUUXOW)](https://codecov.io/gh/deviansg/firewalla_unofficial_sdk)
-
 ![Build](https://github.com/deviansg/firewalla_unofficial_sdk/actions/workflows/ci.yml/badge.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # Unofficial Firewalla SDK
 
