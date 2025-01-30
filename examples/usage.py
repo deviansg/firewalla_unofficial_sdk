@@ -8,8 +8,5 @@ print(boxes)
 flows = firewalla.get_flows()
 print(flows)
 
-devices = firewalla.get_devices()
+devices = firewalla.get_devices(group="8", box="1")
 print(devices)
-
-device = firewalla.get_device(group="8")
-print(device)

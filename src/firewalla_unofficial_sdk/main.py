@@ -241,7 +241,12 @@ class Firewalla:
         return self.__delete(f"target-lists/{id}")
 
     def get_devices(self, box: str = None, group: str = None) -> Union[Dict, List]:
-        return self.__get("devices", params={"box": box, "group": group})
+        query = ""
+        if box != None:
+            query += f"box:{box} "
+        if group != None:
+            query += f"group:{group}"
+        return self.__get("devices", params={"query": query})
     
     def get_stats(self, params: StatsParams, type: Optional[FlowType] = None) -> Union[Dict, List]:
         query_params = ["group", "limit"]
