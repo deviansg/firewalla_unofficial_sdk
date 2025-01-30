@@ -1,7 +1,7 @@
 [project]
-name = "firewalla-unofficial-sdk"
+name = "firewalla-unofficial-sdk_deviansg"
 version = "0.1.0"
-description = "Add your description here"
+description = "Simple SDK for interacting with the Firewalla MSP API with Python."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -9,11 +9,23 @@ dependencies = [
     "requests==2.32.3",
     "ruff>=0.9.3",
 ]
+license = "MIT"
 
 [tool.pytest.ini_options]
-pythonpath = ["."]
+pythonpath = ["src"]
 
 [dependency-groups]
 dev = [
     "pytest>=8.3.4",
 ]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/firewalla_unofficial_sdk"]
+
+[project.urls]
+Homepage = "https://github.com/deviansg/firewalla_unofficial_sdk"
+Issues = "https://github.com/deviansg/firewalla_unofficial_sdk/issues"

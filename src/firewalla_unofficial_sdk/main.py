@@ -61,7 +61,9 @@ class Firewalla:
             self.url = f"{self.url}/{identifier}"
         headers = self.__get_headers()
         if params is not None:
+            params = {k: v for k, v in params.items() if v is not None}
             if "query" in params and not None:
+                print(params["query"])
                 params["query"] = urllib.parse.quote_plus(str(params["query"]))
             if "cursor" in params and not None:
                 params["cursor"] = base64.b64decode(str(params["cursor"]))
@@ -136,14 +138,14 @@ class Firewalla:
     def get_boxes(self, group: Optional[int] = None) -> Union[Dict, List]:
         return self.__get("boxes", params={"group": group})
     
-    def get_alarms(self) -> Union[Dict, List]:
+    def get_alarms(self, params={"query": None, "groupBy": None, "sortBy": None, "limit": None, "cursor": None }) -> Union[Dict, List]:
         """
         Retrieve the alarms.
 
         Returns:
             Union[Dict, List]: The alarms data.
         """
-        return self.__get("alarms", params={"query": None, "groupBy": None, "sortBy": None, "limit": None, "cursor": None })
+        return self.__get("alarms", params=params)
 
     def get_alarm(self, box_id: str, alarm_id: str) -> Union[Dict, List]:
         """
