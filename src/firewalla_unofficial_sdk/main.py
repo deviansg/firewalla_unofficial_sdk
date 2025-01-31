@@ -147,7 +147,7 @@ class Firewalla:
         """
         return self.__get("alarms", params=params)
 
-    def get_alarm(self, box_id: str, alarm_id: str) -> Union[Dict, List]:
+    def get_alarm(self, box: str, alarm: str) -> Union[Dict, List]:
         """
         Retrieve a specific alarm.
 
@@ -158,9 +158,9 @@ class Firewalla:
         Returns:
             Union[Dict, List]: The alarm data.
         """
-        return self.__get("alarms", params={"gid": box_id, "aid": alarm_id})
+        return self.__get(f"alarms/{box}/{alarm}")
     
-    def delete_alarm(self, box_id: str, alarm_id: str) -> Dict:
+    def delete_alarm(self, box: str, alarm: str) -> Dict:
         """
         Delete a specific alarm.
 
@@ -171,7 +171,7 @@ class Firewalla:
         Returns:
             Dict: The response from the API.
         """
-        return self.__delete("alarms", params={"gid": box_id, "aid": alarm_id})
+        return self.__delete(f"alarms/{box}/{alarm}")
     
     def pause_rule(self, id: str) -> str:
         """
