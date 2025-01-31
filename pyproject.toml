@@ -9,6 +9,10 @@ dependencies = [
     "requests==2.32.3",
     "ruff>=0.9.3",
 ]
+dev-dependencies=[
+    "pytest",
+    "requests"
+]
 license = "MIT"
 
 [tool.pytest.ini_options]

@@ -57,4 +57,4 @@ jobs:
 
       - name: Check security with Bandit
         run: |
-          uv run bandit -r firewalla.py
+          uv run bandit -r src/firewalla_unofficial_sdk/main.py

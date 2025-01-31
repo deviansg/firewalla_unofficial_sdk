@@ -1,7 +1,7 @@
 import pytest
 import requests
 from unittest.mock import patch
-from ..firewalla import Firewalla
+from firewalla_unofficial_sdk import Firewalla
 
 @pytest.fixture
 def firewalla_instance():

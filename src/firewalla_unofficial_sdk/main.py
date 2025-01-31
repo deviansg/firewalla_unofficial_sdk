@@ -242,9 +242,9 @@ class Firewalla:
 
     def get_devices(self, box: str = None, group: str = None) -> Union[Dict, List]:
         query = ""
-        if box != None:
+        if box is not None:
             query += f"box:{box} "
-        if group != None:
+        if group is not None:
             query += f"group:{group}"
         return self.__get("devices", params={"query": query})
     
