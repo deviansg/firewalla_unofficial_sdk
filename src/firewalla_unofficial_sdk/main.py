@@ -1,12 +1,27 @@
+import json
 import base64
 import requests
 import urllib.parse
-from typing import Dict, Union, Literal, TypeAlias, List, Optional
+from typing import Dict, Union, Literal, TypeAlias, List, Optional, TypedDict
 
-RulesQuery = Literal["group", "limit"]
+# RulesQuery = Literal["group", "limit"]
 EndpointTypes = Literal["pause", "resume"]
 FlowType: TypeAlias = Literal["topBoxesByBlockedFlows", "topBoxesBySecurityAlarms", "topRegionsByBlockedFlows"]
-StatsParams: TypeAlias = Literal["group", "limit"]
+
+class StatsParams(TypedDict):
+    group: Optional[str]
+    limit: Optional[int]
+    
+class SimpleStatsParams(TypedDict):
+    group: Optional[str]
+
+class AlarmParams(TypedDict):
+    query: Optional[str]
+    groupBy: Optional[str]
+    # sortBy: Optional[str]
+    limit: Optional[int]
+    cursor: Optional[str]
+
 
 class Firewalla:
     '''
@@ -40,14 +55,13 @@ class Firewalla:
             "Content-Type": "application/json"
         }
 
-    def __get(self, endpoint: str, params: Optional[Dict] = None, identifier: Optional[Union[int, str]] = None, timeout: int = 10) -> Union[Dict, List]:
+    def __get(self, endpoint: str, params: Optional[Dict] = None, timeout: int = 10) -> Union[Dict, List]:
         """
         Send a GET request to the specified endpoint.
 
         Args:
             endpoint (str): The API endpoint to send the GET request to.
             params (Dict, optional): A dictionary of query parameters to include in the request. Defaults to None.
-            identifier (Union[int, str], optional): An optional identifier to append to the endpoint URL. Defaults to None.
             timeout (int, optional): The maximum number of seconds to wait for a response. Defaults to 10 seconds.
 
         Returns:
@@ -57,22 +71,48 @@ class Firewalla:
             HTTPError: If the HTTP request returned an unsuccessful status code.
         """
         self.url = f"{self.domain}/{self.api_version}/{endpoint}"
-        if identifier:
-            self.url = f"{self.url}/{identifier}"
         headers = self.__get_headers()
+    
         if params is not None:
-            params = {k: v for k, v in params.items() if v is not None}
-            if "query" in params and not None:
-                print(params["query"])
+            # Replace None values with empty strings
+            params = {k: (v if v is not None else "") for k, v in params.items()}
+            # Add identifier to URL
+            # Parse query parameter
+            if "query" in params and params["query"]:
                 params["query"] = urllib.parse.quote_plus(str(params["query"]))
-            if "cursor" in params and not None:
+                print(f"Query: {params["query"]}")
+            '''
+            While this is documented in the API it does not appear to work
+            resulting in a 400 error -- keeping here for possible future use
+            '''
+            # if "sortBy" in params and params["sortBy"]:
+            #     params["sortBy"] = urllib.parse.quote_plus(str(params["sortBy"]))
+            if "cursor" in params and params["cursor"]:
                 params["cursor"] = base64.b64decode(str(params["cursor"]))
-        response = requests.get(self.url, headers=headers, params=params, timeout=timeout)
-        response.raise_for_status()
-        data = response.json()
-        return data
 
-    def __post(self, endpoint: str, json: Optional[Dict] = None, timeout: int = 10) -> Dict:
+        print(f"Params: {params}")
+                
+        try:
+            response = requests.get(self.url, headers=headers, params=params, timeout=timeout)
+            print(f"Response: {response.text}")
+            print(response.request.url)
+            response.raise_for_status()
+            data = json.loads(response.content)
+            if endpoint and endpoint == "target-lists":
+                print(f"TARGET LIST Data: {data}")
+            return data
+        except requests.exceptions.HTTPError as err:
+            if response.status_code == 400 and not response.content:
+                print("Received a 400 error with an empty body.")
+            else:
+                print("Response is not a 400 error with an empty body.")
+        except requests.exceptions.RequestException as err:
+            print(f"HTTP Request Error occurred: {err}")
+        except json.JSONDecodeError as err:
+            print(f"JSONDecodeError occurred: {err}")
+    
+        
+    def __post(self, endpoint: str, json: Optional[Dict] = {}, timeout: int = 10) -> Dict:
         """
         Send a POST request to the specified endpoint.
 
@@ -86,19 +126,20 @@ class Firewalla:
         Raises:
             HTTPError: If the HTTP request returned an unsuccessful status code.
         """
+        json = {k: (v if v is not None else "") for k, v in json.items()}
         headers = self.__get_headers()
         url = f"{self.domain}/{self.api_version}/{endpoint}"
+        print(f"URL: {url}")
         response = requests.post(url, headers=headers, json=json, timeout=timeout)
         response.raise_for_status()
         return response.json()
 
-    def __put(self, endpoint: str, identifier: Optional[Union[int, str]] = None, json: Optional[Dict] = None, timeout: int = 10) -> Dict:
+    def __put(self, endpoint: str, json: Optional[Dict] = None, timeout: int = 10) -> Dict:
         """
         Send a PUT request to the specified endpoint.
 
         Args:
             endpoint (str): The API endpoint to send the PUT request to.
-            identifier (Union[int, str], optional): An optional identifier to append to the endpoint URL. Defaults to None.
             json (Dict, optional): The JSON payload to include in the request. Defaults to None.
             timeout (int, optional): The maximum number of seconds to wait for a response. Defaults to 10 seconds.
 
@@ -109,8 +150,6 @@ class Firewalla:
         """
         headers = self.__get_headers()
         url = f"{self.domain}/{self.api_version}/{endpoint}"
-        if identifier:
-            url = f"{url}/{identifier}"
         response = requests.put(url, headers=headers, json=json, timeout=timeout)
         response.raise_for_status()
         return response.json()
@@ -136,18 +175,29 @@ class Firewalla:
         return response.json()
 
     def get_boxes(self, group: Optional[int] = None) -> Union[Dict, List]:
+        """
+        Retrieve boxes information.
+
+        Args:
+            group (Optional[int], optional): The group identifier to filter boxes.
+
+        Returns:
+            Union[Dict, List]: The boxes data. If multiple boxes are retrieved, a list is returned. 
+                            Otherwise, returns a dictionary containing the box data.
+        """
         return self.__get("boxes", params={"group": group})
     
-    def get_alarms(self, params={"query": None, "groupBy": None, "sortBy": None, "limit": None, "cursor": None }) -> Union[Dict, List]:
+    def get_alarms(self, params: AlarmParams) -> Union[Dict, List]:
         """
         Retrieve the alarms.
 
         Returns:
             Union[Dict, List]: The alarms data.
         """
-        return self.__get("alarms", params=params)
+        self.__get("alarms", params=params)
 
-    def get_alarm(self, box: str, alarm: str) -> Union[Dict, List]:
+
+    def get_alarm(self, box_id: str, alarm_id: str) -> Union[Dict, List]:
         """
         Retrieve a specific alarm.
 
@@ -158,9 +208,9 @@ class Firewalla:
         Returns:
             Union[Dict, List]: The alarm data.
         """
-        return self.__get(f"alarms/{box}/{alarm}")
+        return self.__get(f"alarms/{box_id}/{alarm_id}")
     
-    def delete_alarm(self, box: str, alarm: str) -> Dict:
+    def delete_alarm(self, box_id: str, alarm_id: str) -> Dict:
         """
         Delete a specific alarm.
 
@@ -171,7 +221,7 @@ class Firewalla:
         Returns:
             Dict: The response from the API.
         """
-        return self.__delete(f"alarms/{box}/{alarm}")
+        return self.__delete(f"alarms/{box_id}/{alarm_id}")
     
     def pause_rule(self, id: str) -> str:
         """
@@ -197,16 +247,17 @@ class Firewalla:
         """
         return self.__post(f"rules/{id}/resume")
     
-    def get_flows(self, params: Dict = {"query": None, "groupBy": None, "sortBy": None, "limit": None, "cursor": None}) -> Union[Dict, List]:
+    def get_flows(self, params: Dict = {"query": None, "groupBy": None, "limit": None, "cursor": None}) -> Union[Dict, List]:
         """
         Retrieve the flows.
 
         Args:
-            params (Dict, optional): A dictionary of query parameters. Defaults to {"query": None, "groupBy": None, "sortBy": None, "limit": None, "cursor": None}.
+            params (Dict, optional): A dictionary of query parameters. Defaults to {"query": None, "groupBy": None, "limit": None, "cursor": None}.
 
         Returns:
             Union[Dict, List]: The flows data.
         """
+        
         return self.__get("flows", params=params)
     
     def get_target_lists(self) -> Union[Dict, List]:
@@ -228,45 +279,44 @@ class Firewalla:
         Returns:
             Union[Dict, List]: The target list data.
         """
-        return self.__get("target-lists", identifier=id)
+        return self.__get(f"target-list/{id}")
     
-    def create_target_list(self, name: str = None, targets: List = [], 
-                           owner: str = None, category: str = None, notes: str = None) -> Dict:
-        return self.__post("target-lists", json={"name": name, "targets": targets, "owner": owner, "category": category, "notes": notes})
+    def create_target_list(self, data={"name": None, "targets": [], "category": None, "notes": None}) -> Dict:
+        """
+        Create a new target list.
+
+        Args:
+            params (Dict, optional): A dictionary of parameters to include in the request. Defaults to {"name": None, "targets": None, "category": None, "notes": None}.
+
+        Returns:
+            Dict: The response from the API.
+        """
+        return self.__post("target-lists", 
+                   json={"name": data.get("name", ""), 
+                     "targets": data.get("targets", []), 
+                     "category": data.get("category", ""),
+                     "notes": data.get("notes", "")})
     
-    def update_target_list(self, id: int, name: str = None, targets: List = [], notes: str = None) -> Dict:
-        return self.__put("target-lists", identifier=id, json={"name": name, "targets": targets, "notes": notes})
+    def update_target_list(self, id: int, data: Dict = {"name": None, "targets": None, "category": None, "notes": None}) -> Dict:
+        return self.__put(f"target-lists/{id}", json=data)
     
     def delete_target_list(self, id: int) -> Dict:
         return self.__delete(f"target-lists/{id}")
 
-    def get_devices(self, box: str = None, group: str = None) -> Union[Dict, List]:
-        query = ""
-        if box is not None:
-            query += f"box:{box} "
-        if group is not None:
-            query += f"group:{group}"
-        return self.__get("devices", params={"query": query})
+    def get_devices(self, params: Dict = {"box_id": None, "group_id": None}) -> Union[Dict, List]:
+        return self.__get("devices", params=params)
     
-    def get_stats(self, params: StatsParams, type: Optional[FlowType] = None) -> Union[Dict, List]:
-        query_params = ["group", "limit"]
-        for key, value in params.items():
-            if key in query_params:
-                params[key] = value
-        return self.__get("stats", params=params, identifier=type)
+    def get_stats(self, type: FlowType, params: StatsParams = None) -> Union[Dict, List]:
+        return self.__get(f"stats/{type}", params=params)
     
-    def get_simple_stats(self, params: StatsParams) -> Union[Dict, List]:
-        query_params = ["group"]
-        for key, value in params.items():
-            if key in query_params:
-                params[key] = value
+    def get_simple_stats(self, params: SimpleStatsParams = {"group": None}) -> Union[Dict, List]:
         return self.__get("stats/simple", params=params)
     
-    def get_flow_trends(self, group: Optional[int] = None) -> Dict:
+    def get_flow_trends(self, group: Optional[str] = None) -> Dict:
         return self.__get("trends/flows", params={"group": group})
     
-    def get_alarm_trends(self, group: Optional[int] = None) -> Dict:
+    def get_alarm_trends(self, group: Optional[str] = None) -> Dict:
         return self.__get("trends/alarms", params={"group": group})
     
-    def get_rule_trends(self, group: Optional[int] = None) -> Dict:
+    def get_rule_trends(self, group: Optional[str] = None) -> Dict:
         return self.__get("trends/rules", params={"group": group})
