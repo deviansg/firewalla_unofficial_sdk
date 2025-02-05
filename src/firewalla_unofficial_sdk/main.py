@@ -102,14 +102,14 @@ class Firewalla:
                 print(f"TARGET LIST Data: {data}")
             return data
         except requests.exceptions.HTTPError as err:
-            if response.status_code == 400 and not response.content:
-                print("Received a 400 error with an empty body.")
+            if response.status_code == 400 and not response.text:
+                return {"error": "Received a 400 error with an empty body."}
             else:
-                print("Response is not a 400 error with an empty body.")
+                return json.loads(err.response.text)
         except requests.exceptions.RequestException as err:
-            print(f"HTTP Request Error occurred: {err}")
+            return json.loads({"error": f"HTTP Request Error occurred: {err}"})
         except json.JSONDecodeError as err:
-            print(f"JSONDecodeError occurred: {err}")
+            return json.loads({"error": f"JSONDecodeError occurred: {err}"})
     
         
     def __post(self, endpoint: str, data: Optional[Dict] = {}, timeout: int = 10) -> Dict:
@@ -141,9 +141,9 @@ class Firewalla:
             elif response.status_code == 400 and not err.response.text:
                 return "Received a 400 error with an empty body."
         except requests.exceptions.RequestException as err:
-            return f"HTTP Request Exception occurred: {err}"
+            return json.loads({"error": f"HTTP Request Error occurred: {err}"})
         except json.JSONDecodeError as err:
-            return f"JSONDecodeError occurred: {err}"
+            return json.loads({"error": f"JSONDecodeError occurred: {err}"})
 
     def __put(self, endpoint: str, data: Optional[Dict] = None, timeout: int = 10) -> Dict:
         """
