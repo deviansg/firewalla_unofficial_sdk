@@ -112,7 +112,7 @@ class Firewalla:
             print(f"JSONDecodeError occurred: {err}")
     
         
-    def __post(self, endpoint: str, json: Optional[Dict] = {}, timeout: int = 10) -> Dict:
+    def __post(self, endpoint: str, data: Optional[Dict] = {}, timeout: int = 10) -> Dict:
         """
         Send a POST request to the specified endpoint.
 
@@ -126,15 +126,26 @@ class Firewalla:
         Raises:
             HTTPError: If the HTTP request returned an unsuccessful status code.
         """
-        json = {k: (v if v is not None else "") for k, v in json.items()}
-        headers = self.__get_headers()
-        url = f"{self.domain}/{self.api_version}/{endpoint}"
-        print(f"URL: {url}")
-        response = requests.post(url, headers=headers, json=json, timeout=timeout)
-        response.raise_for_status()
-        return response.json()
+        try:
+            data = {k: (v if v is not None else "") for k, v in data.items()}
+            headers = self.__get_headers()
+            url = f"{self.domain}/{self.api_version}/{endpoint}"
+            response = requests.post(url, headers=headers, json=data, timeout=timeout)
+            response.raise_for_status()
+            data = json.loads(response.content)
+            return data
+        except requests.exceptions.HTTPError as err:
+            if response.status_code == 400 and err.response.text:
+                data = json.loads(err.response.text)
+                return data
+            elif response.status_code == 400 and not err.response.text:
+                return "Received a 400 error with an empty body."
+        except requests.exceptions.RequestException as err:
+            return f"HTTP Request Exception occurred: {err}"
+        except json.JSONDecodeError as err:
+            return f"JSONDecodeError occurred: {err}"
 
-    def __put(self, endpoint: str, json: Optional[Dict] = None, timeout: int = 10) -> Dict:
+    def __put(self, endpoint: str, data: Optional[Dict] = None, timeout: int = 10) -> Dict:
         """
         Send a PUT request to the specified endpoint.
 
@@ -150,7 +161,7 @@ class Firewalla:
         """
         headers = self.__get_headers()
         url = f"{self.domain}/{self.api_version}/{endpoint}"
-        response = requests.put(url, headers=headers, json=json, timeout=timeout)
+        response = requests.put(url, headers=headers, json=data, timeout=timeout)
         response.raise_for_status()
         return response.json()
 
@@ -281,7 +292,7 @@ class Firewalla:
         """
         return self.__get(f"target-list/{id}")
     
-    def create_target_list(self, data={"name": None, "targets": [], "category": None, "notes": None}) -> Dict:
+    def create_target_list(self, data={"name": None, "targets": [], "category": None, "notes": None, "owner": "205ce275-e674-4a83-9f04-5f27d67fac28"}) -> Dict:
         """
         Create a new target list.
 
@@ -290,15 +301,11 @@ class Firewalla:
 
         Returns:
             Dict: The response from the API.
-        """
-        return self.__post("target-lists", 
-                   json={"name": data.get("name", ""), 
-                     "targets": data.get("targets", []), 
-                     "category": data.get("category", ""),
-                     "notes": data.get("notes", "")})
+        """        
+        return self.__post("target-lists", data=data)
     
     def update_target_list(self, id: int, data: Dict = {"name": None, "targets": None, "category": None, "notes": None}) -> Dict:
-        return self.__put(f"target-lists/{id}", json=data)
+        return self.__put(f"target-lists/{id}", data=data)
     
     def delete_target_list(self, id: int) -> Dict:
         return self.__delete(f"target-lists/{id}")
