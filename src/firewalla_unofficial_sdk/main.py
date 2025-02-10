@@ -81,36 +81,27 @@ class Firewalla:
             if "query" in params and params["query"]:
                 params["query"] = urllib.parse.quote_plus(str(params["query"]))
                 print(f"Query: {params["query"]}")
-            '''
-            While this is documented in the API it does not appear to work
-            resulting in a 400 error -- keeping here for possible future use
-            '''
-            # if "sortBy" in params and params["sortBy"]:
-            #     params["sortBy"] = urllib.parse.quote_plus(str(params["sortBy"]))
             if "cursor" in params and params["cursor"]:
                 params["cursor"] = base64.b64decode(str(params["cursor"]))
-
-        print(f"Params: {params}")
-                
         try:
             response = requests.get(self.url, headers=headers, params=params, timeout=timeout)
-            print(f"Response: {response.text}")
-            print(response.request.url)
             response.raise_for_status()
-            data = json.loads(response.content)
-            if endpoint and endpoint == "target-lists":
-                print(f"TARGET LIST Data: {data}")
-            return data
+            return json.loads(response.content)
         except requests.exceptions.HTTPError as err:
             if response.status_code == 400 and not response.text:
                 return {"error": "Received a 400 error with an empty body."}
+            elif not response.text:
+                return {"error": f"Received a {response.status_code} error with an empty body."}
             else:
-                return json.loads(err.response.text)
+                return {"error": f"HTTP Request Error occurred: {err.response.text}"}
+        except requests.exceptions.ConnectionError as err:
+            return {"error": f"ConnectionError occurred: {str(err)}"}
+        except requests.exceptions.Timeout as err:
+            return {"error": f"Timeout occurred: {str(err)}"}
         except requests.exceptions.RequestException as err:
-            return json.loads({"error": f"HTTP Request Error occurred: {err}"})
+            return {"error": f"HTTP Request Error occurred: {str(err)}"}
         except json.JSONDecodeError as err:
-            return json.loads({"error": f"JSONDecodeError occurred: {err}"})
-    
+            return {"error": f"JSONDecodeError occurred: {str(err)}"}
         
     def __post(self, endpoint: str, data: Optional[Dict] = {}, timeout: int = 10) -> Dict:
         """
@@ -132,18 +123,16 @@ class Firewalla:
             url = f"{self.domain}/{self.api_version}/{endpoint}"
             response = requests.post(url, headers=headers, json=data, timeout=timeout)
             response.raise_for_status()
-            data = json.loads(response.content)
-            return data
+            return json.loads(response.content)
         except requests.exceptions.HTTPError as err:
-            if response.status_code == 400 and err.response.text:
-                data = json.loads(err.response.text)
-                return data
-            elif response.status_code == 400 and not err.response.text:
-                return "Received a 400 error with an empty body."
+            if response.status_code == 400 and not response.text:
+                return {"error": "Received a 400 error with an empty body."}
+            else:
+                return json.loads(err.response.text)
         except requests.exceptions.RequestException as err:
-            return json.loads({"error": f"HTTP Request Error occurred: {err}"})
+            return {"error": f"HTTP Request Error occurred: {str(err)}"}
         except json.JSONDecodeError as err:
-            return json.loads({"error": f"JSONDecodeError occurred: {err}"})
+            return {"error": f"JSONDecodeError occurred: {str(err)}"}
 
     def __put(self, endpoint: str, data: Optional[Dict] = None, timeout: int = 10) -> Dict:
         """
@@ -205,7 +194,7 @@ class Firewalla:
         Returns:
             Union[Dict, List]: The alarms data.
         """
-        self.__get("alarms", params=params)
+        return self.__get("alarms", params=params)
 
 
     def get_alarm(self, box_id: str, alarm_id: str) -> Union[Dict, List]:
@@ -290,9 +279,9 @@ class Firewalla:
         Returns:
             Union[Dict, List]: The target list data.
         """
-        return self.__get(f"target-list/{id}")
+        return self.__get(f"target-lists/{id}")
     
-    def create_target_list(self, data={"name": None, "targets": [], "category": None, "notes": None, "owner": "205ce275-e674-4a83-9f04-5f27d67fac28"}) -> Dict:
+    def create_target_list(self, name: str, targets: List[str], owner: str, category: str = None, notes: str = None) -> Dict:
         """
         Create a new target list.
 
@@ -302,15 +291,32 @@ class Firewalla:
         Returns:
             Dict: The response from the API.
         """        
+        data = {
+            "name": name,
+            "targets": targets,
+            "owner": owner,
+            "category": category,
+            "notes": notes
+        }
         return self.__post("target-lists", data=data)
     
-    def update_target_list(self, id: int, data: Dict = {"name": None, "targets": None, "category": None, "notes": None}) -> Dict:
+    def update_target_list(self, id: int, name: str = None, targets: List[str] = None, category: str = None, notes: str = None) -> Dict:
+        data = {
+            "name": name,
+            "targets": targets,
+            "category": category,
+            "notes": notes
+        }
         return self.__put(f"target-lists/{id}", data=data)
     
     def delete_target_list(self, id: int) -> Dict:
         return self.__delete(f"target-lists/{id}")
 
-    def get_devices(self, params: Dict = {"box_id": None, "group_id": None}) -> Union[Dict, List]:
+    def get_devices(self, box: str = None, group: str = None) -> Union[Dict, List]:
+        params = {
+            "box": box,
+            "group": group
+        }
         return self.__get("devices", params=params)
     
     def get_stats(self, type: FlowType, params: StatsParams = None) -> Union[Dict, List]:
@@ -319,11 +325,11 @@ class Firewalla:
     def get_simple_stats(self, params: SimpleStatsParams = {"group": None}) -> Union[Dict, List]:
         return self.__get("stats/simple", params=params)
     
-    def get_flow_trends(self, group: Optional[str] = None) -> Dict:
-        return self.__get("trends/flows", params={"group": group})
+    def get_flow_trends(self) -> Dict:
+        return self.__get("trends/flows")
     
-    def get_alarm_trends(self, group: Optional[str] = None) -> Dict:
-        return self.__get("trends/alarms", params={"group": group})
+    def get_alarm_trends(self) -> Dict:
+        return self.__get("trends/alarms")
     
-    def get_rule_trends(self, group: Optional[str] = None) -> Dict:
-        return self.__get("trends/rules", params={"group": group})
+    def get_rule_trends(self) -> Dict:
+        return self.__get("trends/rules")
