@@ -4,7 +4,6 @@ import requests
 import urllib.parse
 from typing import Dict, Union, Literal, TypeAlias, List, Optional, TypedDict
 
-# RulesQuery = Literal["group", "limit"]
 EndpointTypes = Literal["pause", "resume"]
 FlowType: TypeAlias = Literal["topBoxesByBlockedFlows", "topBoxesBySecurityAlarms", "topRegionsByBlockedFlows"]
 
@@ -18,7 +17,6 @@ class SimpleStatsParams(TypedDict):
 class AlarmParams(TypedDict):
     query: Optional[str]
     groupBy: Optional[str]
-    # sortBy: Optional[str]
     limit: Optional[int]
     cursor: Optional[str]
 
@@ -65,10 +63,9 @@ class Firewalla:
             timeout (int, optional): The maximum number of seconds to wait for a response. Defaults to 10 seconds.
 
         Returns:
-            Union[Dict, List]: The JSON response from the API. If the response contains paginated results, 
+            Union[Dict, List]: The JSON response from the API. If the response contains paginated results,
                                it returns a list of all results. Otherwise, it returns the JSON response as a dictionary.
-        Raises:
-            HTTPError: If the HTTP request returned an unsuccessful status code.
+                               If the request fails, returns a dictionary containing an error message.
         """
         self.url = f"{self.domain}/{self.api_version}/{endpoint}"
         headers = self.__get_headers()
@@ -114,8 +111,7 @@ class Firewalla:
 
         Returns:
             Dict: The JSON response from the API.
-        Raises:
-            HTTPError: If the HTTP request returned an unsuccessful status code.
+            If the request fails, returns a dictionary containing an error message.
         """
         try:
             data = {k: (v if v is not None else "") for k, v in data.items()}
@@ -301,6 +297,16 @@ class Firewalla:
         return self.__post("target-lists", data=data)
     
     def update_target_list(self, id: int, name: str = None, targets: List[str] = None, category: str = None, notes: str = None) -> Dict:
+        """
+        Updates a target list.
+
+        Args:
+            id (str): The ID of the target list to update.
+            data (dict): The data to update the target list with.
+
+        Returns:
+            dict: The updated target list.
+        """
         data = {
             "name": name,
             "targets": targets,
@@ -310,9 +316,28 @@ class Firewalla:
         return self.__put(f"target-lists/{id}", data=data)
     
     def delete_target_list(self, id: int) -> Dict:
+        """
+        Deletes a target list.
+
+        Args:
+            id (str): The ID of the target list to delete.
+
+        Returns:
+            dict: A message indicating that the target list has been deleted.
+        """
         return self.__delete(f"target-lists/{id}")
 
     def get_devices(self, box: str = None, group: str = None) -> Union[Dict, List]:
+        """
+        Gets devices.
+
+        Args:
+            box (str, optional): The box to filter devices by. Defaults to None.
+            group (str, optional): The group to filter devices by. Defaults to None.
+
+        Returns:
+            Union[Dict, List]: The devices data. If multiple devices are retrieved, a list is returned.
+        """
         params = {
             "box": box,
             "group": group
@@ -320,16 +345,53 @@ class Firewalla:
         return self.__get("devices", params=params)
     
     def get_stats(self, type: FlowType, params: StatsParams = None) -> Union[Dict, List]:
+        """
+        Gets the stats.
+
+        Args:
+            type (FlowType): The type of stats to get.
+            params (StatsParams, optional): The parameters to filter the results. Defaults to None.
+
+        Returns:
+            Union[Dict, List]: The stats data. If multiple stats are retrieved, a list is returned.
+        """
         return self.__get(f"stats/{type}", params=params)
     
     def get_simple_stats(self, params: SimpleStatsParams = {"group": None}) -> Union[Dict, List]:
+        """
+        Gets the simple stats.
+
+        Args:
+            params (SimpleStatsParams, optional): The parameters to filter the results. Defaults to {"group": None}.
+
+        Returns:
+            Union[Dict, List]: The simple stats data. If multiple simple stats are retrieved, a list is returned.
+        """
         return self.__get("stats/simple", params=params)
     
     def get_flow_trends(self) -> Dict:
+        """
+        Gets the flow trends.
+
+        Returns:
+            dict: The flow trends data.
+        """
         return self.__get("trends/flows")
     
     def get_alarm_trends(self) -> Dict:
+        """
+        Gets the alarm trends.
+
+        Returns:
+            Dict: The alarm trends data.
+        """
         return self.__get("trends/alarms")
     
     def get_rule_trends(self) -> Dict:
+        """
+        Gets the rule trends.
+
+        Returns:
+            dict: The rule trends data.
+        """
         return self.__get("trends/rules")
