@@ -18,5 +18,5 @@ requests==2.32.3
     # via firewalla-unofficial-sdk (pyproject.toml)
 ruff==0.9.3
     # via firewalla-unofficial-sdk (pyproject.toml)
-urllib3==2.3.0
+urllib3==2.5.0
     # via requests
